@@ -1,109 +1,114 @@
-import { useEffect, useMemo, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import axios from "axios"
-import io from "socket.io-client"
-import { toast } from "react-toastify"
+import axios from "axios";
+import io from "socket.io-client";
+import { toast } from "react-toastify";
 
-import * as APIs from "../utils/APIs.js"
-import toastConfig from "../utils/toastConfig.js"
+import { roomsRoute } from "../utils/APIs.js";
+import toastConfig from "../utils/toastConfig.js";
 
-import NewRoom from "./NewRoom"
-import WaitingRoom from "./WaitingRoom"
+import NewRoom from "../components/NewRoom";
+import WaitingRoom from "../components/WaitingRoom";
 
 const Lobby = () => {
-  const navigate = useNavigate()
-  const users = useMemo(() => io("http://localhost:5000/users", { transports: ["websocket"] }), [])
-  const socketRooms = useMemo(() => io("http://localhost:5000/rooms", { transports: ["websocket"] }), [])
+  const navigate = useNavigate();
+  const socket = useMemo(() => io("http://localhost:5000", { transports: ["websocket"] }), []);
   const storageUser = useMemo(() => {
-    const user = localStorage.getItem("yamess-user")
-    if (user) return JSON.parse(user)
-  }, [])
+    const user = localStorage.getItem("yamess-user");
+    if (user) return JSON.parse(user);
+  }, []);
 
-  const [name, setName] = useState("Buddy")
-  const [rooms, setRooms] = useState([])
-  const [sortedRooms, setSortedRooms] = useState([])
-  const [type, setType] = useState("all")
-  const [layout, setLayout] = useState("3")
-  const [search, setSearch] = useState("")
-  const [onlineUsers, setOnlineUsers] = useState(0)
-  const [isNewRoom, setIsNewRoom] = useState(true)
-  const [isShowModal, setIsShowModal] = useState(false)
-
-  useEffect(() => {
-    if (storageUser) users.emit("join-lobby", { userId: storageUser._id })
-  }, [])
+  const [name, setName] = useState("Buddy");
+  const [rooms, setRooms] = useState([]);
+  const [sortedRooms, setSortedRooms] = useState([]);
+  const [type, setType] = useState("all");
+  const [layout, setLayout] = useState("3");
+  const [search, setSearch] = useState("");
+  const [onlineUsers, setOnlineUsers] = useState(0);
+  const [isNewRoom, setIsNewRoom] = useState(true);
+  const [isShowModal, setIsShowModal] = useState(false);
 
   useEffect(() => {
-    if (storageUser) setName(storageUser.name)
-    else navigate("/signin")
-  }, [])
+    if (storageUser) setName(storageUser.name);
+    else navigate("/signin");
+  }, []);
 
   useEffect(() => {
-    if (storageUser && isNewRoom) fecthRooms(storageUser.accessToken)
-  }, [isNewRoom])
+    if (storageUser) socket.emit("join-lobby", { userId: storageUser._id });
+  }, []);
 
   useEffect(() => {
-    const text = search.trim().toLowerCase()
-    let newSortedRoom = rooms
+    if (isNewRoom) fecthRooms();
+  }, [isNewRoom]);
+
+  useEffect(() => {
+    const text = search.trim().toLowerCase();
+    let newSortedRoom = rooms;
     if (text.length) {
       newSortedRoom = rooms.filter(
-        (room) => room.title.toLowerCase().includes(text) || room._id.toLowerCase().includes(text)
-      )
+        (room) => room.name.toLowerCase().includes(text) || room._id.toLowerCase().includes(text)
+      );
     }
     switch (type) {
       case "all":
-        setSortedRooms(newSortedRoom)
-        break
+        setSortedRooms(newSortedRoom);
+        break;
 
       case "everyone":
-        const everyoneRooms = newSortedRoom.filter((room) => !room.isPrivate)
-        setSortedRooms(everyoneRooms)
-        break
+        const publicRooms = newSortedRoom.filter((room) => !room.type);
+        setSortedRooms(publicRooms);
+        break;
 
       case "personal":
-        const personalRooms = newSortedRoom.filter((room) => room.isPrivate)
-        setSortedRooms(personalRooms)
-        break
+        const privateRooms = newSortedRoom.filter((room) => room.type);
+        setSortedRooms(privateRooms);
+        break;
 
       default:
-        break
+        break;
     }
-  }, [rooms, type, search])
+  }, [rooms, type, search]);
 
   useEffect(() => {
-    users.on("lobby", (users) => {
-      setOnlineUsers(users.length)
-    })
-    users.on("room", () => {
-      setIsNewRoom(true)
-    })
-  }, [users])
+    socket.on("users", (users) => {
+      setOnlineUsers(users.length);
+    });
+    socket.on("rooms", (users) => {
+      setOnlineUsers(users.length);
+      setIsNewRoom(true);
+    });
+  }, [socket]);
 
-  useEffect(() => {
-    socketRooms.on("room", () => {
-      setIsNewRoom(true)
-    })
-  }, [socketRooms])
-
-  const fecthRooms = async (accessToken) => {
+  const fecthRooms = async () => {
+    const { accessToken } = storageUser;
     try {
-      const { data } = await axios.get(APIs.getAllRoom, {
+      const { data } = await axios.get(roomsRoute.getAll, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-      })
-      setRooms(data.reverse())
-      setIsNewRoom(false)
+      });
+      setRooms(data.reverse());
+      setIsNewRoom(false);
     } catch (error) {
-      toast.error(error.response.data.message, toastConfig)
+      toast.error(error.response.data.message, toastConfig);
     }
-  }
+  };
 
-  const joinRoom = async (accessToken, userId, roomId) => {
+  const handleSignOut = () => {
+    localStorage.removeItem("yamess-user");
+    localStorage.removeItem("yamess-room");
+    socket.emit("leave-lobby");
+    navigate("/signin");
+  };
+
+  const handleJoinRoom = async (room) => {
+    const { accessToken, _id: userId } = storageUser;
+    const { _id: roomId, type } = room;
     try {
+      const route = type ? roomsRoute.addPendingUser : roomsRoute.join;
       await axios.post(
-        APIs.joinRoom,
+        route,
         {
           userId,
           roomId,
@@ -113,31 +118,20 @@ const Lobby = () => {
             Authorization: `Bearer ${accessToken}`,
           },
         }
-      )
-      setIsNewRoom(true)
+      );
+      if (!type) {
+        localStorage.setItem("yamess-room", JSON.stringify(room));
+        socket.emit("join-room", { roomId: room._id });
+        navigate("/chatroom");
+      }
     } catch (error) {
-      toast.error(error.response.data.message, toastConfig)
+      console.log(error);
     }
-  }
-
-  const handleSignOut = () => {
-    users.emit("leave-lobby")
-    localStorage.removeItem("yamess-user")
-    localStorage.removeItem("yamess-room")
-    navigate("/signin")
-  }
-
-  const handleJoinRoom = (room) => {
-    users.emit("leave-lobby")
-    const { accessToken, _id: userId } = storageUser
-    joinRoom(accessToken, userId, room._id)
-    localStorage.setItem("yamess-room", JSON.stringify(room))
-    navigate("/chatroom")
-  }
+  };
 
   return (
     <div className="w-full self-start">
-      {isShowModal ? <NewRoom toggle={setIsShowModal} /> : ""}
+      {isShowModal ? <NewRoom toggle={setIsShowModal} socket={socket} /> : ""}
       <div className="bg-texture sticky top-0 z-10 p-8 shadow-lg">
         <div className="flex items-end justify-between">
           <div className="flex items-center">
@@ -275,11 +269,11 @@ const Lobby = () => {
       </div>
       <div className={layout === "3" ? "grid-3x" : layout === "2" ? "grid-2x" : "grid-1x"}>
         {sortedRooms.map((room, index) => {
-          return <WaitingRoom key={index} data={room} join={handleJoinRoom} />
+          return <WaitingRoom key={index} data={room} join={handleJoinRoom} />;
         })}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Lobby
+export default Lobby;

@@ -1,8 +1,8 @@
 import { Routes, Route } from "react-router-dom";
-import Signup from "./components/Signup";
-import Signin from "./components/Signin";
-import Lobby from "./components/Lobby";
-import ChatRoom from "./components/ChatRoom";
+import Signup from "./routes/Signup";
+import Signin from "./routes/Signin";
+import Lobby from "./routes/Lobby";
+import ChatRoom from "./routes/ChatRoom";
 import { ToastContainer } from "react-toastify";
 
 const App = () => {
@@ -20,3 +20,4 @@ const App = () => {
 };
 
 export default App;
+

@@ -11,6 +11,13 @@
   ::-webkit-scrollbar {
     display: none;
   }
+
+  ion-icon:before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
 }
 
 @layer components {
@@ -28,5 +35,18 @@
 
   .grid-1x {
     @apply grid grid-cols-1 gap-8 p-8;
+  }
+
+  .new:before {
+    z-index: 10;
+    content: "";
+    position: absolute;
+    width: 0.6rem;
+    height: 0.6rem;
+    background-color: #ef4444;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0 0.2rem #fff;
+    top: 0;
+    right: 0;
   }
 }

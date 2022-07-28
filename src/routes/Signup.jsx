@@ -1,60 +1,55 @@
-import { useEffect, useMemo, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import axios from "axios"
-import { toast } from "react-toastify"
-import "react-toastify/dist/ReactToastify.css"
+import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-import * as APIs from "../utils/APIs.js"
-import toastConfig from "../utils/toastConfig.js"
+import { usersRoute } from "../utils/APIs.js";
+import toastConfig from "../utils/toastConfig.js";
 
-const Signin = () => {
-  const navigate = useNavigate()
-  const [passwordType, setPasswordType] = useState("password")
+const Signup = () => {
+  const navigate = useNavigate();
+  const [passwordType, setPasswordType] = useState("password");
 
   const storageUser = useMemo(() => {
-    const user = localStorage.getItem("yamess-user")
-    if (user) return JSON.parse(user)
-  }, [])
+    const user = localStorage.getItem("yamess-user");
+    if (user) return JSON.parse(user);
+  }, []);
 
   useEffect(() => {
-    if (storageUser) navigate("/")
-  }, [])
+    if (storageUser) navigate("/");
+  }, []);
 
   const handleSubmit = async (event) => {
-    event.preventDefault()
-    const formData = new FormData(event.target)
-    const { name, password } = Object.fromEntries(formData)
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const { name, password } = Object.fromEntries(formData);
 
-    if (name.length < 3) {
-      toast.error("Your name must be at least 3 characters!", toastConfig)
-    } else if (password.length < 6) {
-      toast.error("Your password must be at least 6 characters!", toastConfig)
-    } else {
-      try {
-        const { data } = await axios.post(APIs.signIn, {
-          name,
-          password,
-        })
-        localStorage.setItem("yamess-user", JSON.stringify(data))
-        navigate("/")
-      } catch (error) {
-        toast.error(error.response.data.message, toastConfig)
-      }
+    if (name.length < 3 || name.length > 8)
+      return toast.error("Please choose a username 3-8 characters long!", toastConfig);
+    if (password.length < 6) return toast.error("Your password must be at least 6 characters!", toastConfig);
+
+    try {
+      await axios.post(usersRoute.signUp, {
+        name,
+        password,
+      });
+      toast.success("Your account has been created successfully!", toastConfig);
+      navigate("/signin");
+    } catch (error) {
+      toast.error(error.response.data.message, toastConfig);
     }
-  }
+  };
 
   const handleTogglePasswordType = () => {
-    setPasswordType(passwordType === "password" ? "text" : "password")
-  }
+    setPasswordType(passwordType === "password" ? "text" : "password");
+  };
 
   return (
     <div className="h-[32rem] w-full max-w-4xl rounded-lg bg-white p-8 shadow-lg 2xl:h-[40rem] 2xl:max-w-5xl">
       <div className="flex h-full">
-        <div className="w-96 overflow-hidden rounded-lg bg-slate-300 2xl:w-[28rem]">
-          <img className="h-full w-full object-cover" src="./src/assets/images/signin.jpg" alt="image" />
-        </div>
-        <div className="ml-8 flex flex-grow flex-col justify-between">
+        <div className="mr-8 flex flex-grow flex-col justify-between">
           <div className="flex items-center">
             <div className="flex items-center text-3xl text-blue-500">
               <ion-icon name="rocket"></ion-icon>
@@ -65,11 +60,11 @@ const Signin = () => {
             </div>
           </div>
           <div className="flex w-full flex-col">
-            <div className="text-4xl font-bold text-slate-600">Login to chat</div>
+            <div className="text-4xl font-bold text-slate-600">Create new account</div>
             <div className="mt-1 flex">
-              <div className="mr-2 font-bold uppercase text-slate-400">Not a member?</div>
-              <Link to="/signup">
-                <div className="cursor-pointer font-bold uppercase text-blue-500 hover:text-blue-600">Sign up</div>
+              <div className="mr-2 font-bold uppercase text-slate-400">Already a member?</div>
+              <Link to="/signin">
+                <div className="cursor-pointer font-bold uppercase text-blue-500 hover:text-blue-600">Sign in</div>
               </Link>
             </div>
             <form id="form" onSubmit={handleSubmit} className="mt-8">
@@ -110,17 +105,20 @@ const Signin = () => {
           <button
             type="submit"
             form="form"
-            className="mt-12 flex w-fit cursor-pointer self-center rounded-full bg-blue-500 px-6 py-4 text-white hover:bg-blue-600"
+            className="flex w-fit cursor-pointer self-center rounded-full bg-blue-500 px-6 py-4 text-white hover:bg-blue-600"
           >
             <div className="mr-2 flex items-center text-xl">
               <ion-icon name="log-in"></ion-icon>
             </div>
-            <div className="font-bold ">Join lobby</div>
+            <div className="font-bold ">Create account</div>
           </button>
+        </div>
+        <div className="w-96 overflow-hidden rounded-lg bg-slate-300 2xl:w-[28rem]">
+          <img className="h-full w-full object-cover object-left" src="./src/assets/images/signup.jpg" alt="image" />
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Signin
+export default Signup;
