@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "Poppins", sans-serif;
+    overflow: -moz-scrollbars-none;
+  }
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer components {
+  .bg-texture {
+    background-image: repeating-linear-gradient(-60deg, #fff, #eee, #fff 5px);
+  }
+
+  .grid-3x {
+    @apply grid grid-cols-3 gap-8 p-8;
+  }
+
+  .grid-2x {
+    @apply grid grid-cols-2 gap-8 p-8;
+  }
+
+  .grid-1x {
+    @apply grid grid-cols-1 gap-8 p-8;
+  }
+}

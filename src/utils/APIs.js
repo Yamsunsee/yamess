@@ -1,0 +1,12 @@
+export const host = "http://localhost:5000"
+export const getMany = `${host}/user`
+export const signUp = `${host}/user/signup`
+export const signIn = `${host}/user/signin`
+export const signOut = `${host}/user/signout`
+export const getAllRoom = `${host}/room`
+export const getRoomById = `${host}/room/getById`
+export const joinRoom = `${host}/room/join`
+export const leaveRoom = `${host}/room/leave`
+export const createRoom = `${host}/room/create`
+export const getMessages = `${host}/message`
+export const createMessage = `${host}/message`
