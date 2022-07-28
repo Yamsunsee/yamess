@@ -12,7 +12,7 @@ export const getAll = async (req, res) => {
 export const getById = async (req, res) => {
   try {
     const { roomId } = req.query;
-    const rooms = await Room.findOne({ _id: roomId }).populate("members", "name");
+    const rooms = await Room.findOne({ _id: roomId }).populate("members", "name").populate("pendingMembers", "name");
     return res.status(200).json(rooms);
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
