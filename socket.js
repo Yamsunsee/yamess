@@ -34,6 +34,9 @@ export default (io) => {
     socket.on("handle-request", () => {
       io.emit("rooms-change", users);
     });
+    socket.on("accept-request", (data) => {
+      io.emit("request", data);
+    });
     socket.on("send-message", ({ roomId }) => {
       io.to(roomId).emit("messages-change");
     });
