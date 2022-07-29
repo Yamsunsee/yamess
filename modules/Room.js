@@ -14,10 +14,6 @@ const roomSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  host: {
-    type: Schema.Types.ObjectId,
-    required: true,
-  },
   members: {
     type: [Schema.Types.ObjectId],
     ref: "User",

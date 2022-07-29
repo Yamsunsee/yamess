@@ -26,15 +26,12 @@ export const createToken = {
     ),
 };
 
-export const getById = async (req, res) => {
+export const getManyById = async (req, res) => {
   try {
-    const { userId } = req.query;
-    const user = await User.findOne({ _id: userId });
-    if (!user) {
-      return res.status(400).json({ success: false, message: "Wrong username!" });
-    }
-    const { name } = await user._doc;
-    return res.status(200).json({ name });
+    const { userIdList } = req.query;
+    const users = await User.find({ _id: { $in: userIdList } });
+    const responseUsers = users.map(({ _id, name }) => ({ _id, name }));
+    return res.status(200).json(responseUsers);
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }

@@ -10,7 +10,6 @@ import {
   changeName,
   changeType,
   changeLimit,
-  changeHost,
   deleteById,
 } from "../handlers/room.js";
 import { verifyToken } from "../middlewares/auth.js";
@@ -27,7 +26,6 @@ roomRoute.post("/removependinguser", removePendingUser);
 roomRoute.post("/changename", changeName);
 roomRoute.post("/changetype", changeType);
 roomRoute.post("/changelimit", changeLimit);
-roomRoute.post("/changehost", changeHost);
 roomRoute.delete("/", deleteById);
 
 export default roomRoute;

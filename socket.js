@@ -16,42 +16,30 @@ export default (io) => {
   io.on("connection", (socket) => {
     socket.on("join-lobby", ({ userId }) => {
       onlineUsers.add(userId, socket.id);
-      io.emit("users", users);
+      io.emit("users-change", users);
     });
     socket.on("leave-lobby", () => {
       onlineUsers.remove(socket.id);
-      io.emit("users", users);
+      io.emit("users-change", users);
     });
     socket.on("join-room", ({ userId, roomId }) => {
       onlineUsers.add(userId, socket.id);
       socket.join(roomId);
-      io.emit("rooms", users);
+      io.emit("rooms-change", users);
     });
     socket.on("leave-room", () => {
       onlineUsers.remove(socket.id);
-      io.emit("rooms", users);
+      io.emit("rooms-change", users);
+    });
+    socket.on("handle-request", () => {
+      io.emit("rooms-change", users);
     });
     socket.on("send-message", ({ roomId }) => {
-      io.to(roomId).emit("messages");
+      io.to(roomId).emit("messages-change");
     });
     socket.on("disconnect", () => {
       onlineUsers.remove(socket.id);
-      io.emit("users", users);
+      io.emit("users-change", users);
     });
   });
-  // io.of("rooms").on("connection", (socket) => {
-  //   socket.on("join-room", ({ roomId }) => {
-  //     socket.join(roomId);
-  //     io.of("rooms").emit("room", users);
-  //   });
-  //   socket.on("leave-room", () => {
-  //     io.of("rooms").emit("room");
-  //   });
-  //   socket.on("send-message", ({ roomId }) => {
-  //     io.of("rooms").to(roomId).emit("message");
-  //   });
-  //   socket.on("disconnect", () => {
-  //     io.of("room").emit("room");
-  //   });
-  // });
 };
