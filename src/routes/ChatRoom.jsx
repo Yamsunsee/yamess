@@ -72,6 +72,10 @@ const ChatRoom = () => {
       fetchOnlineUsers(users);
       setIsRoomsChange(true);
     });
+    socket.on("users-change", (users) => {
+      fetchOnlineUsers(users);
+      setIsRoomsChange(true);
+    });
   }, [socket]);
 
   const fetchOnlineUsers = async (userIdList) => {
@@ -172,6 +176,7 @@ const ChatRoom = () => {
           },
           params: { roomId },
         });
+        socket.emit("leave-room");
       } catch (error) {
         console.log(error);
       }
@@ -189,12 +194,12 @@ const ChatRoom = () => {
             },
           }
         );
-        localStorage.removeItem("yamess-room");
+        socket.emit("leave-room");
       } catch (error) {
         console.log(error);
       }
     }
-    socket.emit("leave-room");
+    localStorage.removeItem("yamess-room");
     navigate("/");
   };
 
@@ -236,7 +241,7 @@ const ChatRoom = () => {
                 <div className="ml-2 flex cursor-pointer items-center text-3xl group-hover:text-blue-500">
                   <ion-icon name="notifications"></ion-icon>
                 </div>
-                <div className="absolute top-full left-1/2 hidden w-[30rem] -translate-x-1/2 transform grid-cols-1 gap-2 rounded-lg bg-white p-4 shadow-lg group-hover:grid">
+                <div className="absolute -top-1/2 left-full hidden w-[30rem]  grid-cols-1 gap-2 rounded-lg bg-white p-4 shadow-lg group-hover:grid">
                   {pendingUsers.length ? (
                     pendingUsers.map((pendingMember) => (
                       <PendingUser key={pendingMember.name} data={pendingMember} socket={socket} />

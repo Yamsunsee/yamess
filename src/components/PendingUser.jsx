@@ -1,9 +1,7 @@
 import { useMemo } from "react";
 
 import axios from "axios";
-import { toast } from "react-toastify";
 
-import toastConfig from "../utils/toastConfig.js";
 import { roomsRoute } from "../utils/APIs";
 
 const PendingUser = ({ data, socket }) => {
@@ -16,7 +14,7 @@ const PendingUser = ({ data, socket }) => {
     if (user) return JSON.parse(user);
   }, []);
 
-  const handlePendingUser = async () => {
+  const handlePendingUser = async (isAccept) => {
     try {
       const { accessToken } = storageUser;
       const { _id: roomId } = storageRoom;
@@ -32,7 +30,22 @@ const PendingUser = ({ data, socket }) => {
           },
         }
       );
-      socket.emit("handle-request");
+      if (!isAccept) return socket.emit("handle-request");
+      const response = await axios.post(
+        roomsRoute.join,
+        {
+          userId: data._id,
+          roomId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      localStorage.setItem("yamess-room", JSON.stringify(response.data));
+      socket.emit("join-room", { userId: data._id, roomId });
+      socket.emit("accept-request", { userId: data._id, roomId });
     } catch (error) {
       console.log(error);
     }
@@ -46,13 +59,13 @@ const PendingUser = ({ data, socket }) => {
       </div>
       <div className="flex items-center">
         <div
-          onClick={handlePendingUser}
+          onClick={() => handlePendingUser(true)}
           className="mr-2 flex cursor-pointer items-center text-3xl text-green-300 hover:text-green-400"
         >
           <ion-icon name="checkmark-circle"></ion-icon>
         </div>
         <div
-          onClick={handlePendingUser}
+          onClick={() => handlePendingUser(false)}
           className="flex cursor-pointer items-center text-3xl text-red-300 hover:text-red-400"
         >
           <ion-icon name="close-circle"></ion-icon>

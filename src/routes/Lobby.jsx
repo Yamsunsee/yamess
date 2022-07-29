@@ -8,6 +8,7 @@ import { roomsRoute } from "../utils/APIs.js";
 
 import NewRoom from "../components/NewRoom";
 import WaitingRoom from "../components/WaitingRoom";
+import PendingRequest from "../components/PendingRequest";
 
 const Lobby = () => {
   const navigate = useNavigate();
@@ -24,7 +25,8 @@ const Lobby = () => {
   const [layout, setLayout] = useState("3");
   const [search, setSearch] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [isShowModal, setIsShowModal] = useState(false);
+  const [isShowModalRoom, setIsShowModalRoom] = useState(false);
+  const [isShowModalRequest, setIsShowModalRequest] = useState(false);
   const [isRoomsChange, setIsRoomsChange] = useState(true);
 
   useEffect(() => {
@@ -76,6 +78,11 @@ const Lobby = () => {
       setOnlineUsers(users);
       setIsRoomsChange(true);
     });
+    socket.on("request", ({ userId, roomId }) => {
+      if (userId === storageUser._id) {
+        handleJoinRoom({ type: false, _id: roomId });
+      }
+    });
   }, [socket]);
 
   const fecthRooms = async () => {
@@ -120,6 +127,8 @@ const Lobby = () => {
       if (!type) {
         localStorage.setItem("yamess-room", JSON.stringify(data));
         navigate("/chatroom");
+      } else {
+        setIsShowModalRequest(true);
       }
       socket.emit("join-room", { userId, roomId: data._id });
     } catch (error) {
@@ -127,9 +136,30 @@ const Lobby = () => {
     }
   };
 
+  const handleCancleRequest = async (roomId) => {
+    try {
+      const { _id: userId, accessToken } = storageUser;
+      await axios.post(
+        roomsRoute.removePendingUser,
+        {
+          userId,
+          roomId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div className="w-full self-start">
-      {isShowModal ? <NewRoom toggle={setIsShowModal} socket={socket} /> : ""}
+      {isShowModalRoom ? <NewRoom toggle={setIsShowModalRoom} socket={socket} /> : ""}
+      {isShowModalRequest ? <PendingRequest toggle={setIsShowModalRequest} /> : ""}
       <div className="bg-texture sticky top-0 z-10 p-8 shadow-lg">
         <div className="flex items-end justify-between">
           <div className="flex items-center">
@@ -154,7 +184,7 @@ const Lobby = () => {
         </div>
         <div className="mt-8 flex items-center justify-between">
           <div
-            onClick={() => setIsShowModal(true)}
+            onClick={() => setIsShowModalRoom(true)}
             className="flex w-fit cursor-pointer self-center rounded-full bg-blue-500 px-6 py-4 text-white hover:bg-blue-600"
           >
             <div className="mr-2 flex items-center text-xl">
@@ -268,8 +298,8 @@ const Lobby = () => {
         </div>
       </div>
       <div className={layout === "3" ? "grid-3x" : layout === "2" ? "grid-2x" : "grid-1x"}>
-        {sortedRooms.map((room, index) => {
-          return <WaitingRoom key={index} data={room} join={handleJoinRoom} />;
+        {sortedRooms.map((room) => {
+          return <WaitingRoom key={room._id} data={room} join={handleJoinRoom} />;
         })}
       </div>
     </div>
