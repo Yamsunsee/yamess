@@ -4,6 +4,7 @@ import Signin from "./routes/Signin";
 import Lobby from "./routes/Lobby";
 import ChatRoom from "./routes/ChatRoom";
 import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
   return (

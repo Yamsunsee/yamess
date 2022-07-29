@@ -3,7 +3,7 @@ export const host = "http://localhost:5000";
 // Users
 const users = `${host}/users/`;
 export const usersRoute = {
-  getById: users + "getbyid",
+  getManyById: users + "getmanybyid",
   signUp: users + "signup",
   signIn: users + "signin",
   changeName: users + "changename",
@@ -24,7 +24,6 @@ export const roomsRoute = {
   changeName: rooms + "changename",
   changeType: rooms + "changetype",
   changeLimit: rooms + "changelimit",
-  changeHost: rooms + "changehost",
   deleteById: rooms,
 };
 

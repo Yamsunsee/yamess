@@ -3,10 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 import axios from "axios";
 import io from "socket.io-client";
-import { toast } from "react-toastify";
 
 import { roomsRoute } from "../utils/APIs.js";
-import toastConfig from "../utils/toastConfig.js";
 
 import NewRoom from "../components/NewRoom";
 import WaitingRoom from "../components/WaitingRoom";
@@ -25,9 +23,9 @@ const Lobby = () => {
   const [type, setType] = useState("all");
   const [layout, setLayout] = useState("3");
   const [search, setSearch] = useState("");
-  const [onlineUsers, setOnlineUsers] = useState(0);
-  const [isNewRoom, setIsNewRoom] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [isShowModal, setIsShowModal] = useState(false);
+  const [isRoomsChange, setIsRoomsChange] = useState(true);
 
   useEffect(() => {
     if (storageUser) setName(storageUser.name);
@@ -39,8 +37,8 @@ const Lobby = () => {
   }, []);
 
   useEffect(() => {
-    if (isNewRoom) fecthRooms();
-  }, [isNewRoom]);
+    if (isRoomsChange) fecthRooms();
+  }, [isRoomsChange]);
 
   useEffect(() => {
     const text = search.trim().toLowerCase();
@@ -71,12 +69,12 @@ const Lobby = () => {
   }, [rooms, type, search]);
 
   useEffect(() => {
-    socket.on("users", (users) => {
-      setOnlineUsers(users.length);
+    socket.on("users-change", (users) => {
+      setOnlineUsers(users);
     });
-    socket.on("rooms", (users) => {
-      setOnlineUsers(users.length);
-      setIsNewRoom(true);
+    socket.on("rooms-change", (users) => {
+      setOnlineUsers(users);
+      setIsRoomsChange(true);
     });
   }, [socket]);
 
@@ -89,9 +87,9 @@ const Lobby = () => {
         },
       });
       setRooms(data.reverse());
-      setIsNewRoom(false);
+      setIsRoomsChange(false);
     } catch (error) {
-      toast.error(error.response.data.message, toastConfig);
+      console.log(error);
     }
   };
 
@@ -107,7 +105,7 @@ const Lobby = () => {
     const { _id: roomId, type } = room;
     try {
       const route = type ? roomsRoute.addPendingUser : roomsRoute.join;
-      await axios.post(
+      const { data } = await axios.post(
         route,
         {
           userId,
@@ -120,10 +118,10 @@ const Lobby = () => {
         }
       );
       if (!type) {
-        localStorage.setItem("yamess-room", JSON.stringify(room));
-        socket.emit("join-room", { roomId: room._id });
+        localStorage.setItem("yamess-room", JSON.stringify(data));
         navigate("/chatroom");
       }
+      socket.emit("join-room", { userId, roomId: data._id });
     } catch (error) {
       console.log(error);
     }
@@ -165,7 +163,9 @@ const Lobby = () => {
             <div className="font-bold ">New room</div>
           </div>
           <div className="flex">
-            <div className="mr-4 rounded-full bg-blue-100 px-8 py-4 font-bold text-blue-400">Online: {onlineUsers}</div>
+            <div className="mr-4 rounded-full bg-blue-100 px-8 py-4 font-bold text-blue-400">
+              Online: {onlineUsers.length}
+            </div>
             <div className="rounded-full bg-blue-100 px-8 py-4 font-bold text-blue-400">Room: {rooms.length}</div>
           </div>
           <input

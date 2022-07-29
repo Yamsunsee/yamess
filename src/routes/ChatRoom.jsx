@@ -3,10 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 import axios from "axios";
 import io from "socket.io-client";
-import { toast } from "react-toastify";
 
-import toastConfig from "../utils/toastConfig.js";
-import { roomsRoute, messagesRoute } from "../utils/APIs.js";
+import { usersRoute, roomsRoute, messagesRoute } from "../utils/APIs.js";
 
 import Message from "../components/Message.jsx";
 import User from "../components/User.jsx";
@@ -28,18 +26,13 @@ const ChatRoom = () => {
   const [name, setName] = useState("Untitle");
   const [type, setType] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [onlineUserIds, setOnlineUserIds] = useState([]);
+  const [pendingUsers, setPendingUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [pendingMembers, setPendingMembers] = useState([]);
   const [joinedUsers, setJoinedUsers] = useState([]);
-  const [isJoinOrLeaveRoom, setIsJoinOrLeaveRoom] = useState(true);
-  const [isNewUser, setIsNewUser] = useState(true);
-  const [isNewMessage, setIsNewMessage] = useState(true);
+  const [idleUsers, setIdleUsers] = useState([]);
+  const [isRoomsChange, setIsRoomsChange] = useState(true);
+  const [isMessagesChange, setIsMessagesChange] = useState(true);
   const input = useRef();
-
-  useEffect(() => {
-    if (storageRoom) socket.emit("join-room", { roomId: storageRoom._id });
-  }, []);
 
   useEffect(() => {
     if (storageRoom) {
@@ -49,38 +42,58 @@ const ChatRoom = () => {
   }, []);
 
   useEffect(() => {
-    if (storageRoom) {
-      fetchMessages(storageUser.accessToken, storageRoom._id);
-    }
+    if (storageUser && storageRoom) socket.emit("join-room", { roomId: storageRoom._id, userId: storageUser._id });
   }, []);
 
   useEffect(() => {
-    if (isNewMessage) fetchMessages(storageUser.accessToken, storageRoom._id);
-  }, [isNewMessage]);
-
-  // useEffect(() => {
-  //   if (isNewUser) getOnlineUsers(storageUser.accessToken, onlineUserIds);
-  // }, [isNewUser, onlineUserIds]);
+    if (storageRoom) fetchMessages();
+  }, []);
 
   useEffect(() => {
-    if (isJoinOrLeaveRoom) fetchRoom(storageUser.accessToken, storageRoom._id);
-  }, [isJoinOrLeaveRoom]);
+    if (isMessagesChange) fetchMessages();
+  }, [isMessagesChange]);
 
   useEffect(() => {
-    socket.on("messages", () => {
-      setIsNewMessage(true);
+    if (isRoomsChange) fetchRoom();
+  }, [isRoomsChange]);
+
+  useEffect(() => {
+    const newIdleUsers = onlineUsers.filter((onlineUser) =>
+      joinedUsers.every((joinedUser) => joinedUser.name !== onlineUser.name)
+    );
+    setIdleUsers(newIdleUsers);
+  }, [onlineUsers, joinedUsers]);
+
+  useEffect(() => {
+    socket.on("messages-change", () => {
+      setIsMessagesChange(true);
+    });
+    socket.on("rooms-change", (users) => {
+      fetchOnlineUsers(users);
+      setIsRoomsChange(true);
     });
   }, [socket]);
 
-  // useEffect(() => {
-  //   rooms.on("room", (users) => {
-  //     setIsNewUser(true);
-  //     setOnlineUserIds(users);
-  //     setIsJoinOrLeaveRoom(true);
-  //   });
-  // }, [rooms]);
+  const fetchOnlineUsers = async (userIdList) => {
+    const { accessToken } = storageUser;
+    try {
+      const { data } = await axios.get(usersRoute.getManyById, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          userIdList,
+        },
+      });
+      setOnlineUsers(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-  const fetchRoom = async (accessToken, roomId) => {
+  const fetchRoom = async () => {
+    const { accessToken } = storageUser;
+    const { _id: roomId } = storageRoom;
     try {
       const { data } = await axios.get(roomsRoute.getById, {
         headers: {
@@ -91,14 +104,16 @@ const ChatRoom = () => {
         },
       });
       setJoinedUsers(data.members);
-      setPendingMembers(data.pendingMembers);
-      setIsJoinOrLeaveRoom(false);
+      setPendingUsers(data.pendingMembers);
+      setIsRoomsChange(false);
     } catch (error) {
-      toast.error(error.response.data.message, toastConfig);
+      console.log(error);
     }
   };
 
-  const fetchMessages = async (accessToken, roomId) => {
+  const fetchMessages = async () => {
+    const { accessToken } = storageUser;
+    const { _id: roomId } = storageRoom;
     try {
       const { data } = await axios.get(messagesRoute.getByRoomId, {
         headers: {
@@ -109,25 +124,11 @@ const ChatRoom = () => {
         },
       });
       setMessages(data.reverse());
-      setIsNewMessage(false);
+      setIsMessagesChange(false);
     } catch (error) {
-      toast.error(error.response.data.message, toastConfig);
+      console.log(error);
     }
   };
-
-  // const getOnlineUsers = async (accessToken, userIds) => {
-  //   try {
-  //     const { data } = await axios.get(APIs.getMany, {
-  //       headers: {
-  //         Authorization: `Bearer ${accessToken}`,
-  //       },
-  //       params: { userIds },
-  //     });
-  //     setOnlineUsers(data);
-  //   } catch (error) {
-  //     toast.error(error.response.data.message, toastConfig);
-  //   }
-  // };
 
   const handleSendMessage = async (event) => {
     event.preventDefault();
@@ -155,51 +156,46 @@ const ChatRoom = () => {
         input.current.value = "";
         input.current.focus();
       } catch (error) {
-        toast.error(error.response.data.message, toastConfig);
+        console.log(error);
       }
     }
   };
 
   const handleLeaveRoom = async () => {
     const { accessToken, _id: userId } = storageUser;
-    const { _id: roomId, host } = storageRoom;
-    if (host === userId) return toast.error("You have to change the host of this room before you leave!", toastConfig);
-    try {
-      await axios.post(
-        roomsRoute.leave,
-        {
-          userId,
-          roomId,
-        },
-        {
+    const { _id: roomId } = storageRoom;
+    if (joinedUsers.length === 1) {
+      try {
+        await axios.delete(roomsRoute.deleteById, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
-        }
-      );
-      localStorage.removeItem("yamess-room");
-      socket.emit("leave-room");
-      navigate("/");
-    } catch (error) {
-      toast.error(error.response.data.message, toastConfig);
+          params: { roomId },
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      try {
+        await axios.post(
+          roomsRoute.leave,
+          {
+            userId,
+            roomId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        localStorage.removeItem("yamess-room");
+      } catch (error) {
+        console.log(error);
+      }
     }
-  };
-
-  const handleDeleteRoom = async () => {
-    const { accessToken } = storageUser;
-    const { _id: roomId } = storageRoom;
-    try {
-      await axios.delete(roomsRoute.deleteById, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        params: { roomId },
-      });
-      socket.emit("leave-room");
-      navigate("/");
-    } catch (error) {
-      toast.error(error.response.data.message, toastConfig);
-    }
+    socket.emit("leave-room");
+    navigate("/");
   };
 
   return (
@@ -214,7 +210,7 @@ const ChatRoom = () => {
             <span className="text-slate-400">mess</span>
           </div>
         </div>
-        {/* <div className="mt-8 rounded-full bg-blue-100 px-8 py-4 font-bold text-blue-400">
+        <div className="mt-8 rounded-full bg-blue-100 px-8 py-4 font-bold text-blue-400">
           Online: {onlineUsers.length}
         </div>
         <div className="h-full w-full overflow-scroll">
@@ -225,26 +221,26 @@ const ChatRoom = () => {
           </div>
           <div className="my-8 h-2 rounded-full bg-blue-200"></div>
           <div>
-            {onlineUsers
-              .filter((onlineUser) => joinedUsers.every((joinedUser) => joinedUser.name !== onlineUser.name))
-              .map((onlineUser, index) => (
-                <User key={index} data={onlineUser} isJoined={false} />
-              ))}
+            {idleUsers.length
+              ? idleUsers.map((onlineUser, index) => <User key={index} data={onlineUser} isJoined={false} />)
+              : ""}
           </div>
-        </div> */}
+        </div>
       </div>
       <div className="flex h-screen w-full flex-col p-8">
         <div className="flex justify-between rounded-full bg-white px-8 py-4 text-slate-500">
           <div className="flex items-center">
             <div className="text-2xl font-bold">{name}</div>
             {type ? (
-              <div className={pendingMembers.length ? "new group relative" : "group relative"}>
+              <div className={pendingUsers.length ? "new group relative" : "group relative"}>
                 <div className="ml-2 flex cursor-pointer items-center text-3xl group-hover:text-blue-500">
                   <ion-icon name="notifications"></ion-icon>
                 </div>
                 <div className="absolute top-full left-1/2 hidden w-[30rem] -translate-x-1/2 transform grid-cols-1 gap-2 rounded-lg bg-white p-4 shadow-lg group-hover:grid">
-                  {pendingMembers.length ? (
-                    pendingMembers.map((pendingMember) => <PendingUser key={pendingMember.name} data={pendingMember} />)
+                  {pendingUsers.length ? (
+                    pendingUsers.map((pendingMember) => (
+                      <PendingUser key={pendingMember.name} data={pendingMember} socket={socket} />
+                    ))
                   ) : (
                     <div className="text-center italic">No pending requests</div>
                   )}
@@ -254,25 +250,16 @@ const ChatRoom = () => {
               ""
             )}
           </div>
-          {joinedUsers.length === 1 ? (
-            <div
-              onClick={handleDeleteRoom}
-              className="flex cursor-pointer items-center text-3xl text-slate-400 hover:text-blue-500"
-            >
-              <ion-icon name="trash"></ion-icon>
-            </div>
-          ) : (
-            <div
-              onClick={handleLeaveRoom}
-              className="flex cursor-pointer items-center text-3xl text-slate-400 hover:text-blue-500"
-            >
-              <ion-icon name="log-out"></ion-icon>
-            </div>
-          )}
+          <div
+            onClick={handleLeaveRoom}
+            className="flex cursor-pointer items-center text-3xl text-slate-400 hover:text-blue-500"
+          >
+            <ion-icon name="log-out"></ion-icon>
+          </div>
         </div>
         <div className="my-4 flex flex-grow flex-col-reverse overflow-auto">
           {messages.map((message, index) => (
-            <Message key={index} data={message} />
+            <Message key={index + message} data={message} />
           ))}
         </div>
         <form onSubmit={handleSendMessage} action="" className="flex w-full">

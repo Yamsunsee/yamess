@@ -2,10 +2,8 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import axios from "axios";
-import { toast } from "react-toastify";
 
 import { roomsRoute } from "../utils/APIs.js";
-import toastConfig from "../utils/toastConfig.js";
 
 const NewRoom = ({ toggle, socket }) => {
   const [type, setType] = useState("public");
@@ -41,7 +39,7 @@ const NewRoom = ({ toggle, socket }) => {
       socket.emit("join-room", { userId, roomId: data._id });
       navigate("/chatroom");
     } catch (error) {
-      toast.error(error.response.data.message, toastConfig);
+      console.log(error);
     }
     toggle(false);
   };

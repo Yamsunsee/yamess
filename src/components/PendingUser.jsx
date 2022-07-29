@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import toastConfig from "../utils/toastConfig.js";
 import { roomsRoute } from "../utils/APIs";
 
-const PendingUser = ({ data }) => {
+const PendingUser = ({ data, socket }) => {
   const storageUser = useMemo(() => {
     const user = localStorage.getItem("yamess-user");
     if (user) return JSON.parse(user);
@@ -32,8 +32,9 @@ const PendingUser = ({ data }) => {
           },
         }
       );
+      socket.emit("handle-request");
     } catch (error) {
-      toast.error(error.response.data.message, toastConfig);
+      console.log(error);
     }
   };
 

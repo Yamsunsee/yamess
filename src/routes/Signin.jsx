@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 
 import axios from "axios";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 import { usersRoute } from "../utils/APIs.js";
 import toastConfig from "../utils/toastConfig.js";
@@ -36,8 +35,7 @@ const Signin = () => {
       localStorage.setItem("yamess-user", JSON.stringify(data));
       navigate("/");
     } catch (error) {
-      console.log(error);
-      // toast.error(error.response.data.message, toastConfig);
+      toast.error(error.response.data.message, toastConfig);
     }
   };
 
