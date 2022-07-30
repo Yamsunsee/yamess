@@ -31,11 +31,15 @@ export default (io) => {
       onlineUsers.remove(socket.id);
       io.emit("rooms-change", users);
     });
-    socket.on("handle-request", () => {
+    socket.on("decline-request", () => {
       io.emit("rooms-change", users);
+      io.emit("decline-request");
     });
     socket.on("accept-request", (data) => {
-      io.emit("request", data);
+      io.emit("accept-request", data);
+    });
+    socket.on("invite-user", () => {
+      io.emit("rooms-change", users);
     });
     socket.on("send-message", ({ roomId }) => {
       io.to(roomId).emit("messages-change");

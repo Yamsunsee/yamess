@@ -23,6 +23,11 @@ const roomSchema = new Schema({
     ref: "User",
     default: [],
   },
+  invitedMembers: {
+    type: [Schema.Types.ObjectId],
+    ref: "User",
+    default: [],
+  },
 });
 
 export default model("Room", roomSchema);

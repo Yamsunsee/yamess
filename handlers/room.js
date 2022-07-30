@@ -20,6 +20,17 @@ export const getById = async (req, res) => {
   }
 };
 
+export const getInvited = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const rooms = await Room.find({ invitedMembers: { $all: [userId] } });
+    const responseRooms = rooms.map(({ _id, name }) => ({ _id, name }));
+    return res.status(200).json(responseRooms);
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 export const create = async (req, res) => {
   try {
     const { userId, name, type, limit } = req.body;
@@ -74,6 +85,30 @@ export const removePendingUser = async (req, res) => {
   try {
     const { roomId, userId } = req.body;
     const newRoom = await Room.findOneAndUpdate({ _id: roomId }, { $pull: { pendingMembers: userId } }, { new: true });
+    return res.status(200).json(newRoom);
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const addInvitedUser = async (req, res) => {
+  try {
+    const { roomId, userId } = req.body;
+    const newRoom = await Room.findOneAndUpdate(
+      { _id: roomId },
+      { $addToSet: { invitedMembers: userId } },
+      { new: true }
+    );
+    return res.status(200).json(newRoom);
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const removeInvitedUser = async (req, res) => {
+  try {
+    const { roomId, userId } = req.body;
+    const newRoom = await Room.findOneAndUpdate({ _id: roomId }, { $pull: { invitedMembers: userId } }, { new: true });
     return res.status(200).json(newRoom);
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
