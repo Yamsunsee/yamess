@@ -9,6 +9,7 @@ import { usersRoute, roomsRoute, messagesRoute } from "../utils/APIs.js";
 import Message from "../components/Message.jsx";
 import User from "../components/User.jsx";
 import PendingUser from "../components/PendingUser.jsx";
+import PendingRoom from "../components/PendingRoom.jsx";
 
 const ChatRoom = () => {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ const ChatRoom = () => {
   const [type, setType] = useState(false);
   const [messages, setMessages] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [invitedUsers, setInvitedUsers] = useState([]);
+  const [invitedRooms, setInvitedRooms] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [joinedUsers, setJoinedUsers] = useState([]);
   const [idleUsers, setIdleUsers] = useState([]);
@@ -96,7 +99,7 @@ const ChatRoom = () => {
   };
 
   const fetchRoom = async () => {
-    const { accessToken } = storageUser;
+    const { accessToken, _id: userId } = storageUser;
     const { _id: roomId } = storageRoom;
     try {
       const { data } = await axios.get(roomsRoute.getById, {
@@ -107,8 +110,18 @@ const ChatRoom = () => {
           roomId,
         },
       });
+      const invitedRooms = await axios.get(roomsRoute.getInvited, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          userId,
+        },
+      });
       setJoinedUsers(data.members);
       setPendingUsers(data.pendingMembers);
+      setInvitedUsers(data.invitedMembers);
+      setInvitedRooms(invitedRooms.data);
       setIsRoomsChange(false);
     } catch (error) {
       console.log(error);
@@ -203,6 +216,44 @@ const ChatRoom = () => {
     navigate("/");
   };
 
+  const handleInviteUser = async (userId, isInvited) => {
+    const { accessToken } = storageUser;
+    const { _id: roomId } = storageRoom;
+    try {
+      if (isInvited) {
+        await axios.post(
+          roomsRoute.removeInvitedUser,
+          {
+            userId,
+            roomId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        socket.emit("invite-user");
+      } else {
+        await axios.post(
+          roomsRoute.addInvitedUser,
+          {
+            userId,
+            roomId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        socket.emit("invite-user");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div className="flex h-screen w-full">
       <div className="flex w-96 flex-col items-center bg-white p-8 shadow-lg">
@@ -220,14 +271,22 @@ const ChatRoom = () => {
         </div>
         <div className="h-full w-full overflow-scroll">
           <div>
-            {joinedUsers.map((joinedUser, index) => (
-              <User key={index} data={joinedUser} isJoined={true} />
+            {joinedUsers.map((joinedUser) => (
+              <User key={joinedUser.name} data={joinedUser} isJoined={true} />
             ))}
           </div>
           <div className="my-8 h-2 rounded-full bg-blue-200"></div>
           <div>
             {idleUsers.length
-              ? idleUsers.map((onlineUser, index) => <User key={index} data={onlineUser} isJoined={false} />)
+              ? idleUsers.map((idleUser) => (
+                  <User
+                    key={idleUser.name}
+                    data={idleUser}
+                    isJoined={false}
+                    isInvited={invitedUsers.includes(idleUser._id)}
+                    toggleInvite={handleInviteUser}
+                  />
+                ))
               : ""}
           </div>
         </div>
@@ -236,24 +295,29 @@ const ChatRoom = () => {
         <div className="flex justify-between rounded-full bg-white px-8 py-4 text-slate-500">
           <div className="flex items-center">
             <div className="text-2xl font-bold">{name}</div>
-            {type ? (
-              <div className={pendingUsers.length ? "new group relative" : "group relative"}>
-                <div className="ml-2 flex cursor-pointer items-center text-3xl group-hover:text-blue-500">
-                  <ion-icon name="notifications"></ion-icon>
-                </div>
-                <div className="absolute -top-1/2 left-full hidden w-[30rem]  grid-cols-1 gap-2 rounded-lg bg-white p-4 shadow-lg group-hover:grid">
-                  {pendingUsers.length ? (
-                    pendingUsers.map((pendingMember) => (
+
+            <div className={pendingUsers.length || invitedRooms.length ? "new group relative" : "group relative"}>
+              <div className="ml-2 flex cursor-pointer items-center text-3xl group-hover:text-blue-500">
+                <ion-icon name="notifications"></ion-icon>
+              </div>
+              <div className="absolute top-0 left-full hidden w-[30rem]  grid-cols-1 gap-2 rounded-lg bg-white p-4 shadow-lg group-hover:grid">
+                {pendingUsers.length
+                  ? pendingUsers.map((pendingMember) => (
                       <PendingUser key={pendingMember.name} data={pendingMember} socket={socket} />
                     ))
-                  ) : (
-                    <div className="text-center italic">No pending requests</div>
-                  )}
-                </div>
+                  : ""}
+                {invitedRooms.length
+                  ? invitedRooms.map((pendingRoom) => (
+                      <PendingRoom key={pendingRoom.name} data={pendingRoom} socket={socket} leave={handleLeaveRoom} />
+                    ))
+                  : ""}
+                {pendingUsers.length + invitedRooms.length ? (
+                  ""
+                ) : (
+                  <div className="text-center italic">No pending requests</div>
+                )}
               </div>
-            ) : (
-              ""
-            )}
+            </div>
           </div>
           <div
             onClick={handleLeaveRoom}

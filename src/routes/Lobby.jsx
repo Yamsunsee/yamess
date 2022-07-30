@@ -9,6 +9,7 @@ import { roomsRoute } from "../utils/APIs.js";
 import NewRoom from "../components/NewRoom";
 import WaitingRoom from "../components/WaitingRoom";
 import PendingRequest from "../components/PendingRequest";
+import PendingRoom from "../components/PendingRoom.jsx";
 
 const Lobby = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Lobby = () => {
   const [name, setName] = useState("Buddy");
   const [rooms, setRooms] = useState([]);
   const [sortedRooms, setSortedRooms] = useState([]);
+  const [invitedRooms, setInvitedRooms] = useState([]);
   const [type, setType] = useState("all");
   const [layout, setLayout] = useState("3");
   const [search, setSearch] = useState("");
@@ -32,6 +34,11 @@ const Lobby = () => {
   useEffect(() => {
     if (storageUser) setName(storageUser.name);
     else navigate("/signin");
+  }, []);
+
+  useEffect(() => {
+    const isInRoom = localStorage.getItem("yamess-room");
+    if (isInRoom) navigate("/chatroom");
   }, []);
 
   useEffect(() => {
@@ -55,12 +62,12 @@ const Lobby = () => {
         setSortedRooms(newSortedRoom);
         break;
 
-      case "everyone":
+      case "public":
         const publicRooms = newSortedRoom.filter((room) => !room.type);
         setSortedRooms(publicRooms);
         break;
 
-      case "personal":
+      case "private":
         const privateRooms = newSortedRoom.filter((room) => room.type);
         setSortedRooms(privateRooms);
         break;
@@ -78,22 +85,38 @@ const Lobby = () => {
       setOnlineUsers(users);
       setIsRoomsChange(true);
     });
-    socket.on("request", ({ userId, roomId }) => {
+    socket.on("accept-request", ({ userId, roomId }) => {
       if (userId === storageUser._id) {
         handleJoinRoom({ type: false, _id: roomId });
       }
     });
+    socket.on("decline-request", () => {
+      setIsShowModalRequest(false);
+    });
   }, [socket]);
 
+  useEffect(() => {
+    if (!isShowModalRequest) handleCancleRequest();
+  }, [isShowModalRequest]);
+
   const fecthRooms = async () => {
-    const { accessToken } = storageUser;
+    const { accessToken, _id: userId } = storageUser;
     try {
       const { data } = await axios.get(roomsRoute.getAll, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+      const invitedRooms = await axios.get(roomsRoute.getInvited, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          userId,
+        },
+      });
       setRooms(data.reverse());
+      setInvitedRooms(invitedRooms.data);
       setIsRoomsChange(false);
     } catch (error) {
       console.log(error);
@@ -124,8 +147,8 @@ const Lobby = () => {
           },
         }
       );
+      localStorage.setItem("yamess-room", JSON.stringify(data));
       if (!type) {
-        localStorage.setItem("yamess-room", JSON.stringify(data));
         navigate("/chatroom");
       } else {
         setIsShowModalRequest(true);
@@ -136,21 +159,28 @@ const Lobby = () => {
     }
   };
 
-  const handleCancleRequest = async (roomId) => {
+  const handleCancleRequest = async () => {
     try {
-      const { _id: userId, accessToken } = storageUser;
-      await axios.post(
-        roomsRoute.removePendingUser,
-        {
-          userId,
-          roomId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
+      const room = localStorage.getItem("yamess-room");
+      if (room) {
+        const storageRoom = JSON.parse(room);
+        const { _id: userId, accessToken } = storageUser;
+        const { _id: roomId } = storageRoom;
+        await axios.post(
+          roomsRoute.removePendingUser,
+          {
+            userId,
+            roomId,
           },
-        }
-      );
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        localStorage.removeItem("yamess-room");
+        socket.emit("decline-request");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -169,6 +199,22 @@ const Lobby = () => {
             <div className="text-3xl font-bold text-slate-600">
               Ya
               <span className="text-slate-400">mess</span>
+            </div>
+            <div
+              className={invitedRooms.length ? "new group relative text-slate-500" : "group relative text-slate-500"}
+            >
+              <div className="ml-2 flex cursor-pointer items-center text-3xl group-hover:text-blue-500">
+                <ion-icon name="notifications"></ion-icon>
+              </div>
+              <div className="absolute top-0 left-full hidden  w-[30rem] grid-cols-1 gap-2 rounded-lg bg-white p-4 shadow-lg group-hover:grid">
+                {invitedRooms.length ? (
+                  invitedRooms.map((pendingRoom) => (
+                    <PendingRoom key={pendingRoom.name} data={pendingRoom} socket={socket} />
+                  ))
+                ) : (
+                  <div className="text-center italic">No pending requests</div>
+                )}
+              </div>
             </div>
           </div>
           <div className="italic text-slate-400">
@@ -224,28 +270,28 @@ const Lobby = () => {
             </div>
             <div className="mr-4">
               <input
-                onChange={() => setType("everyone")}
+                onChange={() => setType("public")}
                 type="radio"
                 name="sort"
-                id="everyone"
+                id="public"
                 className="cursor-pointer"
-                checked={type === "everyone"}
+                checked={type === "public"}
               />
-              <label className="ml-1 cursor-pointer" htmlFor="everyone">
-                Everyone
+              <label className="ml-1 cursor-pointer" htmlFor="public">
+                Public
               </label>
             </div>
             <div>
               <input
-                onChange={() => setType("personal")}
+                onChange={() => setType("private")}
                 type="radio"
                 name="sort"
-                id="personal"
+                id="private"
                 className="cursor-pointer"
-                checked={type === "personal"}
+                checked={type === "private"}
               />
-              <label className="ml-1 cursor-pointer" htmlFor="personal">
-                Personal
+              <label className="ml-1 cursor-pointer" htmlFor="private">
+                Private
               </label>
             </div>
           </div>

@@ -53,7 +53,11 @@ const WaitingRoom = ({ data, join }) => {
           </div>
         </div>
       </div>
-      {data.type === true ? (
+      {data.members.length === data.limit ? (
+        <div className="mt-8 w-full cursor-no-drop rounded-lg bg-red-400 px-8 py-4 text-center text-xl font-bold uppercase text-white hover:bg-red-500">
+          This room is full
+        </div>
+      ) : data.type === true ? (
         <div
           onClick={() => join(data)}
           className="mt-8 w-full cursor-pointer rounded-lg bg-orange-400 px-8 py-4 text-center text-xl font-bold uppercase text-white hover:bg-orange-500"

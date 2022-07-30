@@ -4,25 +4,20 @@ import axios from "axios";
 
 import { roomsRoute } from "../utils/APIs";
 
-const PendingUser = ({ data, socket }) => {
+const PendingRoom = ({ data, socket, leave }) => {
   const storageUser = useMemo(() => {
     const user = localStorage.getItem("yamess-user");
     if (user) return JSON.parse(user);
   }, []);
-  const storageRoom = useMemo(() => {
-    const user = localStorage.getItem("yamess-room");
-    if (user) return JSON.parse(user);
-  }, []);
 
-  const handlePendingUser = async (isAccept) => {
+  const handlePendingRoom = async (isAccept) => {
+    const { accessToken, _id: userId } = storageUser;
     try {
-      const { accessToken } = storageUser;
-      const { _id: roomId } = storageRoom;
       await axios.post(
-        roomsRoute.removePendingUser,
+        roomsRoute.removeInvitedUser,
         {
-          userId: data._id,
-          roomId,
+          userId,
+          roomId: data._id,
         },
         {
           headers: {
@@ -31,11 +26,12 @@ const PendingUser = ({ data, socket }) => {
         }
       );
       if (!isAccept) return socket.emit("decline-request");
+      if (leave) await leave();
       const response = await axios.post(
         roomsRoute.join,
         {
-          userId: data._id,
-          roomId,
+          userId,
+          roomId: data._id,
         },
         {
           headers: {
@@ -44,8 +40,8 @@ const PendingUser = ({ data, socket }) => {
         }
       );
       localStorage.setItem("yamess-room", JSON.stringify(response.data));
-      socket.emit("join-room", { userId: data._id, roomId });
-      socket.emit("accept-request", { userId: data._id, roomId });
+      socket.emit("join-room", { userId, roomId: data._id });
+      socket.emit("accept-request", { userId, roomId: data._id });
     } catch (error) {
       console.log(error);
     }
@@ -54,18 +50,17 @@ const PendingUser = ({ data, socket }) => {
   return (
     <div className="flex w-full items-center justify-between rounded-lg px-4 py-2 hover:bg-blue-50">
       <div className="mr-4 italic">
-        <span className="font-bold capitalize text-blue-400">{data.name} </span>
-        asked to join your room
+        Someone invited you to join room <span className="font-bold capitalize text-blue-400">{data.name}</span>
       </div>
       <div className="flex items-center">
         <div
-          onClick={() => handlePendingUser(true)}
+          onClick={() => handlePendingRoom(true)}
           className="mr-2 flex cursor-pointer items-center text-3xl text-green-300 hover:text-green-400"
         >
           <ion-icon name="checkmark-circle"></ion-icon>
         </div>
         <div
-          onClick={() => handlePendingUser(false)}
+          onClick={() => handlePendingRoom(false)}
           className="flex cursor-pointer items-center text-3xl text-red-300 hover:text-red-400"
         >
           <ion-icon name="close-circle"></ion-icon>
@@ -75,4 +70,4 @@ const PendingUser = ({ data, socket }) => {
   );
 };
 
-export default PendingUser;
+export default PendingRoom;

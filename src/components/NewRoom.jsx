@@ -58,6 +58,7 @@ const NewRoom = ({ toggle, socket }) => {
             type="text"
             placeholder="Untitle"
             autoComplete="off"
+            autoFocus
           />
           <div className="mt-8 flex w-full justify-between text-slate-400">
             <div className="flex flex-col">

@@ -5,10 +5,16 @@ const PendingRequest = ({ toggle }) => {
         onClick={(event) => event.stopPropagation()}
         className="flex h-[32rem] w-96 flex-col items-center justify-center rounded-lg bg-white p-8 transition 2xl:h-[40rem]"
       >
+        <lord-icon
+          src="https://cdn.lordicon.com/xjovhxra.json"
+          trigger="loop"
+          colors="primary:#94a3b8,secondary:#94a3b8"
+          style={{ width: 250, height: 250 }}
+        ></lord-icon>
         <div className="text-center italic text-slate-400">
-          Your request has been sent!
+          Please wait a moment!
           <br />
-          Please wait for the host of this room!
+          Your request has been sent!
         </div>
         <button
           onClick={() => {
