@@ -28,7 +28,7 @@ app.use(cors());
 app.use("/users", userRoute);
 app.use("/rooms", roomRoute);
 app.use("/messages", messageRoute);
-app.use("/refreshtoken", refreshToken);
+app.get("/refreshtoken", refreshToken);
 
 const connectDatabase = async () => {
   try {

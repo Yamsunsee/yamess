@@ -14,7 +14,7 @@ export const createToken = {
         id: user.id,
       },
       ACCESS_TOKEN_SECRET_KEY,
-      { expiresIn: "1d" }
+      { expiresIn: "15s" }
     ),
   refreshToken: (user) =>
     jwt.sign(
@@ -67,9 +67,9 @@ export const signIn = async (req, res) => {
     if (isValidPassword) {
       const accessToken = createToken.accessToken(user);
       const refreshToken = createToken.refreshToken(user);
-      await User.findOneAndUpdate({ name }, { refreshToken });
-      const { password, ...others } = user._doc;
-      return res.status(202).json({ ...others, accessToken, refreshToken });
+      const newUser = await User.findOneAndUpdate({ name }, { refreshToken }, { new: true });
+      const { password, ...others } = newUser._doc;
+      return res.status(202).json({ ...others, accessToken });
     } else {
       return res.status(400).json({ success: false, message: "Wrong password!" });
     }

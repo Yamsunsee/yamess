@@ -36,6 +36,7 @@ export default (io) => {
       io.emit("decline-request");
     });
     socket.on("accept-request", (data) => {
+      io.emit("rooms-change", users);
       io.emit("accept-request", data);
     });
     socket.on("invite-user", () => {
