@@ -38,7 +38,7 @@ const ChatRoom = () => {
   useEffect(() => {
     if (storageRoom) {
       setName(storageRoom.name);
-    } else navigate("/");
+    } else navigate("yamess");
   }, [isRoomsChange]);
 
   useEffect(() => {
@@ -206,7 +206,7 @@ const ChatRoom = () => {
     }
     if (isChangeRoute) {
       localStorage.removeItem("yamess-room");
-      navigate("/");
+      navigate("yamess");
     }
   };
 

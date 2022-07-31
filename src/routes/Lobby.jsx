@@ -38,13 +38,13 @@ const Lobby = () => {
 
   useEffect(() => {
     if (storageUser) setName(storageUser.name);
-    else if (isNewUser) navigate("/signup");
-    else navigate("/signin");
+    else if (isNewUser) navigate("yamess/signup");
+    else navigate("yamess/signin");
   }, []);
 
   useEffect(() => {
     const isInRoom = localStorage.getItem("yamess-room");
-    if (isInRoom) navigate("/chatroom");
+    if (isInRoom) navigate("yamess/chatroom");
   }, []);
 
   useEffect(() => {
@@ -133,7 +133,7 @@ const Lobby = () => {
     localStorage.removeItem("yamess-user");
     localStorage.removeItem("yamess-room");
     socket.emit("leave-lobby");
-    navigate("/signin");
+    navigate("yamess/signin");
   };
 
   const handleJoinRoom = async (room) => {
@@ -155,7 +155,7 @@ const Lobby = () => {
       );
       localStorage.setItem("yamess-room", JSON.stringify(data));
       if (!type) {
-        navigate("/chatroom");
+        navigate("yamess/chatroom");
       } else {
         setIsShowModalRequest(true);
       }
