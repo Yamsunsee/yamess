@@ -14,7 +14,7 @@ import { refreshToken } from "../utils/refreshToken.js";
 
 const ChatRoom = () => {
   const navigate = useNavigate();
-  const socket = useMemo(() => io("http://localhost:5000", { transports: ["websocket"] }), []);
+  const socket = useMemo(() => io("https://yamess-backend.herokuapp.com", { transports: ["websocket"] }), []);
   const [name, setName] = useState("Untitle");
   const [messages, setMessages] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);

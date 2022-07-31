@@ -1,4 +1,4 @@
-export const host = "http://localhost:5000";
+export const host = "https://yamess-backend.herokuapp.com";
 
 // Users
 const users = `${host}/users/`;

@@ -13,7 +13,7 @@ import PendingRoom from "../components/PendingRoom.jsx";
 
 const Lobby = () => {
   const navigate = useNavigate();
-  const socket = useMemo(() => io("http://localhost:5000", { transports: ["websocket"] }), []);
+  const socket = useMemo(() => io("https://yamess-backend.herokuapp.com", { transports: ["websocket"] }), []);
   const storageUser = useMemo(() => {
     const user = localStorage.getItem("yamess-user");
     if (user) return JSON.parse(user);
