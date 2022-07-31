@@ -10,10 +10,10 @@ const App = () => {
   return (
     <div className="bg-texture flex min-h-screen w-full select-none items-center justify-center">
       <Routes>
-        <Route path="/" element={<Lobby />} />
-        <Route path="signup" element={<Signup />} />
-        <Route path="signin" element={<Signin />} />
-        <Route path="chatroom" element={<ChatRoom />} />
+        <Route path="yamess" element={<Lobby />} />
+        <Route path="yamess/signup" element={<Signup />} />
+        <Route path="yamess/signin" element={<Signin />} />
+        <Route path="yamess/chatroom" element={<ChatRoom />} />
       </Routes>
       <ToastContainer limit={3} />
     </div>
