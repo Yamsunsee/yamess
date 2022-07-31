@@ -17,7 +17,7 @@ const Signin = () => {
   }, []);
 
   useEffect(() => {
-    if (storageUser) navigate("yamess");
+    if (storageUser) navigate("/yamess");
   }, []);
 
   const handleSubmit = async (event) => {
@@ -34,7 +34,7 @@ const Signin = () => {
       });
       localStorage.setItem("yamess-user", JSON.stringify(data));
       localStorage.setItem("yamess-new", JSON.stringify(false));
-      navigate("yamess");
+      navigate("/yamess");
     } catch (error) {
       toast.error(error.response.data.message, toastConfig);
     }

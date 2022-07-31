@@ -37,7 +37,7 @@ const NewRoom = ({ toggle, socket }) => {
       );
       localStorage.setItem("yamess-room", JSON.stringify(data));
       socket.emit("join-room", { userId, roomId: data._id });
-      navigate("yamess/chatroom");
+      navigate("/yamess/chatroom");
     } catch (error) {
       console.log(error.response.data);
     }

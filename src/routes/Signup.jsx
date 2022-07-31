@@ -17,7 +17,7 @@ const Signup = () => {
   }, []);
 
   useEffect(() => {
-    if (storageUser) navigate("yamess");
+    if (storageUser) navigate("/yamess");
   }, []);
 
   const handleSubmit = async (event) => {
@@ -35,7 +35,7 @@ const Signup = () => {
         password,
       });
       toast.success("Your account has been created successfully!", toastConfig);
-      navigate("yamess/signin");
+      navigate("/yamess/signin");
     } catch (error) {
       toast.error(error.response.data.message, toastConfig);
     }
