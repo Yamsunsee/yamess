@@ -25,6 +25,9 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cors());
 
+app.get("/", (req, res) => {
+  res.send("Server is running...");
+});
 app.use("/users", userRoute);
 app.use("/rooms", roomRoute);
 app.use("/messages", messageRoute);
