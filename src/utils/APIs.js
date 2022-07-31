@@ -36,3 +36,6 @@ export const messagesRoute = {
   getByRoomId: messages,
   create: messages,
 };
+
+// Token
+export const tokenRoute = host + "/refreshtoken";

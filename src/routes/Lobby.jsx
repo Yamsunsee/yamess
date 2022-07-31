@@ -18,6 +18,11 @@ const Lobby = () => {
     const user = localStorage.getItem("yamess-user");
     if (user) return JSON.parse(user);
   }, []);
+  const isNewUser = useMemo(() => {
+    const user = localStorage.getItem("yamess-new");
+    if (user) return false;
+    return true;
+  }, []);
 
   const [name, setName] = useState("Buddy");
   const [rooms, setRooms] = useState([]);
@@ -33,6 +38,7 @@ const Lobby = () => {
 
   useEffect(() => {
     if (storageUser) setName(storageUser.name);
+    else if (isNewUser) navigate("/signup");
     else navigate("/signin");
   }, []);
 
@@ -46,7 +52,7 @@ const Lobby = () => {
   }, []);
 
   useEffect(() => {
-    if (isRoomsChange) fecthRooms();
+    if (storageUser && isRoomsChange) fetchRooms();
   }, [isRoomsChange]);
 
   useEffect(() => {
@@ -99,7 +105,7 @@ const Lobby = () => {
     if (!isShowModalRequest) handleCancleRequest();
   }, [isShowModalRequest]);
 
-  const fecthRooms = async () => {
+  const fetchRooms = async () => {
     const { accessToken, _id: userId } = storageUser;
     try {
       const { data } = await axios.get(roomsRoute.getAll, {
@@ -119,7 +125,7 @@ const Lobby = () => {
       setInvitedRooms(invitedRooms.data);
       setIsRoomsChange(false);
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
   };
 
@@ -155,7 +161,7 @@ const Lobby = () => {
       }
       socket.emit("join-room", { userId, roomId: data._id });
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
   };
 
@@ -182,7 +188,7 @@ const Lobby = () => {
         socket.emit("decline-request");
       }
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
   };
 
@@ -218,8 +224,8 @@ const Lobby = () => {
             </div>
           </div>
           <div className="italic text-slate-400">
-            Hello <span className="font-bold capitalize text-red-400">{name}</span>! Your friends are online! Let's join
-            to chat with them!
+            Hello <span className="font-bold capitalize text-red-400">{name}</span>!{" "}
+            <span className="hidden lg:inline-block">Your friends are online! Let's join to chat with them!</span>
           </div>
           <div
             onClick={handleSignOut}
@@ -231,12 +237,12 @@ const Lobby = () => {
         <div className="mt-8 flex items-center justify-between">
           <div
             onClick={() => setIsShowModalRoom(true)}
-            className="flex w-fit cursor-pointer self-center rounded-full bg-blue-500 px-6 py-4 text-white hover:bg-blue-600"
+            className="flex w-fit cursor-pointer self-center rounded-full bg-blue-500 px-8 py-4 text-white hover:bg-blue-600"
           >
             <div className="mr-2 flex items-center text-xl">
               <ion-icon name="add-circle"></ion-icon>
             </div>
-            <div className="font-bold ">New room</div>
+            <div className="font-bold">New room</div>
           </div>
           <div className="flex">
             <div className="mr-4 rounded-full bg-blue-100 px-8 py-4 font-bold text-blue-400">
@@ -248,7 +254,7 @@ const Lobby = () => {
             onChange={(event) => setSearch(event.target.value)}
             className="rounded-full px-8 py-4 font-bold text-slate-400 focus:outline-slate-400"
             type="text"
-            placeholder="Find room by name of ID"
+            placeholder="Find room by name or ID"
             autoComplete="off"
           />
           <div className="flex font-bold text-slate-400">

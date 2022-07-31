@@ -33,6 +33,7 @@ const Signin = () => {
         password,
       });
       localStorage.setItem("yamess-user", JSON.stringify(data));
+      localStorage.setItem("yamess-new", JSON.stringify(false));
       navigate("/");
     } catch (error) {
       toast.error(error.response.data.message, toastConfig);
@@ -47,7 +48,7 @@ const Signin = () => {
     <div className="h-[32rem] w-full max-w-4xl rounded-lg bg-white p-8 shadow-lg 2xl:h-[40rem] 2xl:max-w-5xl">
       <div className="flex h-full">
         <div className="w-96 overflow-hidden rounded-lg bg-slate-300 2xl:w-[28rem]">
-          <img className="h-full w-full object-cover" src="./src/assets/images/signin.jpg" alt="image" />
+          <img className="h-full w-full object-cover" src="./src/assets/images/signin.png" alt="image" />
         </div>
         <div className="ml-8 flex flex-grow flex-col justify-between">
           <div className="flex items-center">
@@ -76,6 +77,7 @@ const Signin = () => {
                   type="text"
                   placeholder="Enter your name"
                   autoComplete="off"
+                  autoFocus
                 />
               </div>
               <div className="mt-4">

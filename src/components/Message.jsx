@@ -1,11 +1,11 @@
-import { useMemo } from "react"
+import { useMemo } from "react";
 
 const Message = ({ data }) => {
   const storageUser = useMemo(() => {
-    const user = localStorage.getItem("yamess-user")
-    if (user) return JSON.parse(user)
-  }, [])
-  const self = storageUser.name === data.userId.name
+    const user = localStorage.getItem("yamess-user");
+    if (user) return JSON.parse(user);
+  }, []);
+  const self = storageUser.name === data.userId.name;
 
   return (
     <>
@@ -27,7 +27,7 @@ const Message = ({ data }) => {
         </div>
       )}
     </>
-  )
-}
+  );
+};
 
-export default Message
+export default Message;

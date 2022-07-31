@@ -43,7 +43,7 @@ const PendingRoom = ({ data, socket, leave }) => {
       socket.emit("join-room", { userId, roomId: data._id });
       socket.emit("accept-request", { userId, roomId: data._id });
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
   };
 

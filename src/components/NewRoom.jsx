@@ -39,7 +39,7 @@ const NewRoom = ({ toggle, socket }) => {
       socket.emit("join-room", { userId, roomId: data._id });
       navigate("/chatroom");
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
     toggle(false);
   };

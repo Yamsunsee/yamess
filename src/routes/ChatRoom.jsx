@@ -10,22 +10,12 @@ import Message from "../components/Message.jsx";
 import User from "../components/User.jsx";
 import PendingUser from "../components/PendingUser.jsx";
 import PendingRoom from "../components/PendingRoom.jsx";
+import { refreshToken } from "../utils/refreshToken.js";
 
 const ChatRoom = () => {
   const navigate = useNavigate();
-
   const socket = useMemo(() => io("http://localhost:5000", { transports: ["websocket"] }), []);
-  const storageUser = useMemo(() => {
-    const user = localStorage.getItem("yamess-user");
-    if (user) return JSON.parse(user);
-  }, []);
-  const storageRoom = useMemo(() => {
-    const user = localStorage.getItem("yamess-room");
-    if (user) return JSON.parse(user);
-  }, []);
-
   const [name, setName] = useState("Untitle");
-  const [type, setType] = useState(false);
   const [messages, setMessages] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
   const [invitedUsers, setInvitedUsers] = useState([]);
@@ -36,13 +26,20 @@ const ChatRoom = () => {
   const [isRoomsChange, setIsRoomsChange] = useState(true);
   const [isMessagesChange, setIsMessagesChange] = useState(true);
   const input = useRef();
+  const storageUser = useMemo(() => {
+    const user = localStorage.getItem("yamess-user");
+    if (user) return JSON.parse(user);
+  }, []);
+  const storageRoom = useMemo(() => {
+    const room = localStorage.getItem("yamess-room");
+    if (room) return JSON.parse(room);
+  }, [isRoomsChange]);
 
   useEffect(() => {
     if (storageRoom) {
       setName(storageRoom.name);
-      setType(storageRoom.type);
     } else navigate("/");
-  }, []);
+  }, [isRoomsChange]);
 
   useEffect(() => {
     if (storageUser && storageRoom) socket.emit("join-room", { roomId: storageRoom._id, userId: storageUser._id });
@@ -57,7 +54,7 @@ const ChatRoom = () => {
   }, [isMessagesChange]);
 
   useEffect(() => {
-    if (isRoomsChange) fetchRoom();
+    if (isRoomsChange && storageRoom) fetchRoom();
   }, [isRoomsChange]);
 
   useEffect(() => {
@@ -94,7 +91,7 @@ const ChatRoom = () => {
       });
       setOnlineUsers(data);
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
   };
 
@@ -124,7 +121,7 @@ const ChatRoom = () => {
       setInvitedRooms(invitedRooms.data);
       setIsRoomsChange(false);
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
   };
 
@@ -143,7 +140,7 @@ const ChatRoom = () => {
       setMessages(data.reverse());
       setIsMessagesChange(false);
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
   };
 
@@ -173,28 +170,23 @@ const ChatRoom = () => {
         input.current.value = "";
         input.current.focus();
       } catch (error) {
-        console.log(error);
+        console.log(error.response.data);
       }
     }
   };
 
-  const handleLeaveRoom = async () => {
+  const handleLeaveRoom = async (isChangeRoute = false) => {
     const { accessToken, _id: userId } = storageUser;
     const { _id: roomId } = storageRoom;
-    if (joinedUsers.length === 1) {
-      try {
+    try {
+      if (joinedUsers.length === 1) {
         await axios.delete(roomsRoute.deleteById, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
           params: { roomId },
         });
-        socket.emit("leave-room");
-      } catch (error) {
-        console.log(error);
-      }
-    } else {
-      try {
+      } else {
         await axios.post(
           roomsRoute.leave,
           {
@@ -207,13 +199,15 @@ const ChatRoom = () => {
             },
           }
         );
-        socket.emit("leave-room");
-      } catch (error) {
-        console.log(error);
       }
+      if (isChangeRoute) socket.emit("leave-room");
+    } catch (error) {
+      console.log(error.response.data);
     }
-    localStorage.removeItem("yamess-room");
-    navigate("/");
+    if (isChangeRoute) {
+      localStorage.removeItem("yamess-room");
+      navigate("/");
+    }
   };
 
   const handleInviteUser = async (userId, isInvited) => {
@@ -250,7 +244,7 @@ const ChatRoom = () => {
         socket.emit("invite-user");
       }
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
   };
 
@@ -295,7 +289,6 @@ const ChatRoom = () => {
         <div className="flex justify-between rounded-full bg-white px-8 py-4 text-slate-500">
           <div className="flex items-center">
             <div className="text-2xl font-bold">{name}</div>
-
             <div className={pendingUsers.length || invitedRooms.length ? "new group relative" : "group relative"}>
               <div className="ml-2 flex cursor-pointer items-center text-3xl group-hover:text-blue-500">
                 <ion-icon name="notifications"></ion-icon>
@@ -320,10 +313,10 @@ const ChatRoom = () => {
             </div>
           </div>
           <div
-            onClick={handleLeaveRoom}
+            onClick={() => handleLeaveRoom(true)}
             className="flex cursor-pointer items-center text-3xl text-slate-400 hover:text-blue-500"
           >
-            <ion-icon name="log-out"></ion-icon>
+            <ion-icon name={joinedUsers.length === 1 ? "trash" : "log-out"}></ion-icon>
           </div>
         </div>
         <div className="my-4 flex flex-grow flex-col-reverse overflow-auto">

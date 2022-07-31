@@ -10,8 +10,8 @@ const PendingUser = ({ data, socket }) => {
     if (user) return JSON.parse(user);
   }, []);
   const storageRoom = useMemo(() => {
-    const user = localStorage.getItem("yamess-room");
-    if (user) return JSON.parse(user);
+    const room = localStorage.getItem("yamess-room");
+    if (room) return JSON.parse(room);
   }, []);
 
   const handlePendingUser = async (isAccept) => {
@@ -47,7 +47,7 @@ const PendingUser = ({ data, socket }) => {
       socket.emit("join-room", { userId: data._id, roomId });
       socket.emit("accept-request", { userId: data._id, roomId });
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data);
     }
   };
 

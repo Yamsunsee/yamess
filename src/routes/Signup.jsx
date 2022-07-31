@@ -75,6 +75,7 @@ const Signup = () => {
                   type="text"
                   placeholder="Enter your name"
                   autoComplete="off"
+                  autoFocus
                 />
               </div>
               <div className="mt-4">
@@ -113,7 +114,7 @@ const Signup = () => {
           </button>
         </div>
         <div className="w-96 overflow-hidden rounded-lg bg-slate-300 2xl:w-[28rem]">
-          <img className="h-full w-full object-cover object-left" src="./src/assets/images/signup.jpg" alt="image" />
+          <img className="h-full w-full object-cover" src="./src/assets/images/signup.png" alt="image" />
         </div>
       </div>
     </div>
