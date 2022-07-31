@@ -114,7 +114,7 @@ const Signup = () => {
           </button>
         </div>
         <div className="w-96 overflow-hidden rounded-lg bg-slate-300 2xl:w-[28rem]">
-          <img className="h-full w-full object-cover" src="./src/assets/images/signup.png" alt="image" />
+          <img className="h-full w-full object-cover" src="./assets/images/signup.png" alt="image" />
         </div>
       </div>
     </div>

@@ -17,7 +17,7 @@ const WaitingRoom = ({ data, join }) => {
     <div className="flex flex-col rounded-lg bg-white p-8 shadow-lg">
       <div className="flex items-center">
         <div className="mr-4 h-20 w-20 overflow-hidden rounded-full">
-          <img className="h-full w-full object-contain" src="./src/assets/images/room.png" alt="avatar" />
+          <img className="h-full w-full object-contain" src="../assets/images/room.png" alt="avatar" />
         </div>
         <div>
           <div className="text-2xl font-bold capitalize text-slate-500">{data.name}</div>
