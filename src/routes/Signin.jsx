@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 
 import { usersRoute } from "../utils/APIs.js";
 import toastConfig from "../utils/toastConfig.js";
+import signInImage from "../assets/images/signin.png";
 
 const Signin = () => {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ const Signin = () => {
     <div className="h-[32rem] w-full max-w-4xl rounded-lg bg-white p-8 shadow-lg 2xl:h-[40rem] 2xl:max-w-5xl">
       <div className="flex h-full">
         <div className="w-96 overflow-hidden rounded-lg bg-slate-300 2xl:w-[28rem]">
-          <img className="h-full w-full object-cover" src="./assets/images/signin.png" alt="image" />
+          <img className="h-full w-full object-cover" src={signInImage} alt="image" />
         </div>
         <div className="ml-8 flex flex-grow flex-col justify-between">
           <div className="flex items-center">
