@@ -13,7 +13,7 @@ import { refreshToken } from "./handlers/refreshToken.js";
 
 dotenv.config();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 const DATABASE_URI = process.env.DATABASE_URI;
 const { connect } = mongoose;
 
