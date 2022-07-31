@@ -64,7 +64,7 @@ const Signin = () => {
             <div className="text-4xl font-bold text-slate-600">Login to chat</div>
             <div className="mt-1 flex">
               <div className="mr-2 font-bold uppercase text-slate-400">Not a member?</div>
-              <Link to="/signup">
+              <Link to="/yamess/signup">
                 <div className="cursor-pointer font-bold uppercase text-blue-500 hover:text-blue-600">Sign up</div>
               </Link>
             </div>

@@ -62,7 +62,7 @@ const Signup = () => {
             <div className="text-4xl font-bold text-slate-600">Create new account</div>
             <div className="mt-1 flex">
               <div className="mr-2 font-bold uppercase text-slate-400">Already a member?</div>
-              <Link to="/signin">
+              <Link to="/yamess/signin">
                 <div className="cursor-pointer font-bold uppercase text-blue-500 hover:text-blue-600">Sign in</div>
               </Link>
             </div>
