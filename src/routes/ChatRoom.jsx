@@ -10,13 +10,14 @@ import Message from "../components/Message.jsx";
 import User from "../components/User.jsx";
 import PendingUser from "../components/PendingUser.jsx";
 import PendingRoom from "../components/PendingRoom.jsx";
-import { refreshToken } from "../utils/refreshToken.js";
+import PendingMessage from "../components/PendingMessage.jsx";
 
 const ChatRoom = () => {
   const navigate = useNavigate();
   const socket = useMemo(() => io("https://yamess-backend.herokuapp.com", { transports: ["websocket"] }), []);
   const [name, setName] = useState("Untitle");
   const [messages, setMessages] = useState([]);
+  const [pendingMessages, setPendingMessages] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
   const [invitedUsers, setInvitedUsers] = useState([]);
   const [invitedRooms, setInvitedRooms] = useState([]);
@@ -137,6 +138,7 @@ const ChatRoom = () => {
           roomId,
         },
       });
+      setPendingMessages([]);
       setMessages(data.reverse());
       setIsMessagesChange(false);
     } catch (error) {
@@ -148,17 +150,21 @@ const ChatRoom = () => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const { content } = Object.fromEntries(formData);
+    const newMessage = content.trim();
 
-    if (content.trim().length) {
+    if (newMessage.length) {
       try {
         const { _id: userId, accessToken } = storageUser;
         const { _id: roomId } = storageRoom;
+        input.current.value = "";
+        input.current.focus();
+        setPendingMessages((previousMessages) => [newMessage, ...previousMessages]);
         await axios.post(
           messagesRoute.create,
           {
             userId,
             roomId,
-            content: content.trim(),
+            content: newMessage,
           },
           {
             headers: {
@@ -167,8 +173,6 @@ const ChatRoom = () => {
           }
         );
         socket.emit("send-message", { roomId });
-        input.current.value = "";
-        input.current.focus();
       } catch (error) {
         console.log(error.response.data);
       }
@@ -320,6 +324,9 @@ const ChatRoom = () => {
           </div>
         </div>
         <div className="my-4 flex flex-grow flex-col-reverse overflow-auto">
+          {pendingMessages.map((message, index) => (
+            <PendingMessage key={index + message} data={message} />
+          ))}
           {messages.map((message, index) => (
             <Message key={index + message} data={message} />
           ))}
