@@ -1,4 +1,4 @@
-import Message from "./index.js";
+import Message from "./schema.js";
 
 export const getByRoomId = async (req, res) => {
   try {

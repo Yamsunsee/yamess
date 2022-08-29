@@ -1,7 +1,7 @@
-import Room from "./index.js";
-import User from "../User/index.js";
-import Message from "../Message/index.js";
-import Invitation from "../Invitation/index.js";
+import Room from "./schema.js";
+import User from "../User/schema.js";
+import Message from "../Message/schema.js";
+import Invitation from "../Invitation/schema.js";
 
 export const getAll = async (req, res) => {
   try {

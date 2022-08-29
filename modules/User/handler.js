@@ -1,6 +1,6 @@
 import argon2 from "argon2";
 import dotenv from "dotenv";
-import User from "./index.js";
+import User from "./schema.js";
 
 dotenv.config();
 const { hash, verify } = argon2;

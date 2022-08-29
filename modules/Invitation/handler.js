@@ -1,4 +1,4 @@
-import Invitation from "./index.js";
+import Invitation from "./schema.js";
 
 export const getAllById = async (req, res) => {
   try {
