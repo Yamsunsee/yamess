@@ -1,4 +1,14 @@
-import Invitation from "./index";
+import Invitation from "./index.js";
+
+export const getAllById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const invitations = await Invitation.find({ userId });
+    return res.status(200).json({ isSuccess: true, message: "Successfully!", data: invitations });
+  } catch (error) {
+    return res.status(400).json({ isSuccess: false, message: error.message });
+  }
+};
 
 export const create = async (req, res) => {
   try {
@@ -16,7 +26,7 @@ export const create = async (req, res) => {
 
 export const deleteById = async (req, res) => {
   try {
-    const { userId, roomId } = req.body;
+    const { userId, roomId } = req.params;
     await Invitation.findOneAndDelete({ userId, roomId });
     return res.status(200).json({ isSuccess: true, message: "Deleted!" });
   } catch (error) {

@@ -9,7 +9,7 @@ import {
   changeLimit,
   changeHost,
   deleteById,
-} from "../modules/Room/handler";
+} from "../modules/Room/handler.js";
 
 const roomRoute = Router();
 

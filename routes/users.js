@@ -9,7 +9,7 @@ import {
   addPendingRoom,
   removePendingRoom,
   deleteById,
-} from "../modules/User/handler";
+} from "../modules/User/handler.js";
 
 const userRoute = Router();
 

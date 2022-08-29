@@ -1,7 +1,7 @@
-import Room from "./index";
-import User from "../User";
-import Message from "../Message";
-import Invitation from "../Invitation";
+import Room from "./index.js";
+import User from "../User/index.js";
+import Message from "../Message/index.js";
+import Invitation from "../Invitation/index.js";
 
 export const getAll = async (req, res) => {
   try {
@@ -39,7 +39,7 @@ export const create = async (req, res) => {
       name,
       limit,
       isPrivate,
-      host: userId,
+      hostId: userId,
     });
     await newRoom.save();
     return res.status(200).json({ isSuccess: true, message: "Successfully!", data: newRoom });

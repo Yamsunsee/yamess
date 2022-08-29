@@ -12,10 +12,6 @@ const invitationSchema = new Schema({
     required: true,
     ref: "Room",
   },
-  content: {
-    type: String,
-    required: true,
-  },
 });
 
 export default model("Invitation", invitationSchema);

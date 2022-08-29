@@ -1,6 +1,6 @@
 import argon2 from "argon2";
 import dotenv from "dotenv";
-import User from "./index";
+import User from "./index.js";
 
 dotenv.config();
 const { hash, verify } = argon2;
@@ -44,7 +44,7 @@ export const signIn = async (req, res) => {
     }
     const isValidPassword = await verify(user.password, password);
     if (isValidPassword) {
-      const { password, ...others } = user._doc;
+      const { password, name, ...others } = user._doc;
       return res.status(200).json({ isSuccess: true, message: "Successfully!", data: others });
     } else {
       return res.status(400).json({ isSuccess: false, message: "Wrong password!" });
